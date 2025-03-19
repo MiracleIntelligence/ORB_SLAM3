@@ -233,3 +233,20 @@ A flag in `include\Config.h` activates time measurements. It is necessary to unc
 
 # 9. Calibration
 You can find a tutorial for visual-inertial calibration and a detailed description of the contents of valid configuration files at  `Calibration_Tutorial.pdf`
+
+# HOW TO PREPARE AND BUILD
+
+```
+sudo apt update
+sudo apt install -y \
+    build-essential cmake git \
+    libopencv-dev \
+    libeigen3-dev \
+    libpangolin-dev \
+    ffmpeg libavcodec-dev libavutil-dev libavformat-dev libswscale-dev \
+    libglew-dev libxkbcommon-x11-0 \
+    libboost-dev libboost-thread-dev \
+    qtbase5-dev
+
+sudo ./build.sh
+```
