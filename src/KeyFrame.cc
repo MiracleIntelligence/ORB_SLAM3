@@ -423,7 +423,7 @@ namespace ORB_SLAM3
         vPairs.reserve(KFcounter.size());
         if (!upParent)
             cout << "UPDATE_CONN: current KF " << mnId << endl;
-        for (map<KeyFrame *, int>::iterator mit = KFcounter.begin(), mend = KFcounter.end(); mit != mend; mit++)
+        for (map<KeyFrame *, int>::iterator mit = KFcounter.begin(), mend = KFcounter.end(); mit != mend;)
         {
             if (!upParent)
                 cout << "  UPDATE_CONN: KF " << mit->first->mnId << " ; num matches: " << mit->second << endl;
@@ -436,6 +436,11 @@ namespace ORB_SLAM3
             {
                 vPairs.push_back(make_pair(mit->second, mit->first));
                 (mit->first)->AddConnection(this, mit->second);
+                mit++;
+            }
+            else
+            {
+                mit = KFcounter.erase(mit);
             }
         }
 
