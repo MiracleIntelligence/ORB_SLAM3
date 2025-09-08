@@ -696,10 +696,10 @@ namespace ORB_SLAM3
         while (i < lAccScoreAndMatch.size() && (vpLoopCand.size() < nNumCandidates || vpMergeCand.size() < nNumCandidates))
         {
             KeyFrame *pKFi = it->second;
-            if (pKFi->isBad())
-                continue;
+            // if (pKFi->isBad())
+            //     continue;
 
-            if (!pKFi->isBad() && !spAlreadyAddedKF.count(pKFi))
+            if (!pKFi->isBad() && !pKFi->isBad() && !spAlreadyAddedKF.count(pKFi))
             {
                 if (pKF->GetMap() == pKFi->GetMap() && vpLoopCand.size() < nNumCandidates)
                 {
