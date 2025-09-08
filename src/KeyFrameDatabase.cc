@@ -674,6 +674,13 @@ namespace ORB_SLAM3
                 if (pKF2->mnPlaceRecognitionQuery != pKF->mnId)
                     continue;
 
+                if (pKF2->mnPlaceRecognitionWords <= minCommonWords)
+                {
+                    float si = mpVoc->score(pKF->mBowVec, pKFi->mBowVec);
+                    pKF2->mPlaceRecognitionScore = si;
+                    pKF2->mnPlaceRecognitionWords = minCommonWords + 1;
+                }
+
                 accScore += pKF2->mPlaceRecognitionScore;
                 if (pKF2->mPlaceRecognitionScore > bestScore)
                 {
