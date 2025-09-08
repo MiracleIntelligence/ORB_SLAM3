@@ -34,7 +34,7 @@ namespace ORB_SLAM3
                            vector<KeyFrame *> vpKeyFrameMatchedMP) : mnIterations(0), mnBestInliers(0), mbFixScale(bFixScale),
                                                                      pCamera1(pKF1->mpCamera), pCamera2(pKF2->mpCamera)
     {
-        bool bDifferentKFs = false;
+        bool bDifferentKFs = true;
         if (vpKeyFrameMatchedMP.empty())
         {
             bDifferentKFs = true;
