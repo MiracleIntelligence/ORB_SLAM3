@@ -19,6 +19,7 @@
 #include "Tracking.h"
 
 #include <chrono>
+#include <cmath>
 #include <iostream>
 #include <mutex>
 
@@ -1755,6 +1756,12 @@ namespace ORB_SLAM3
         if (mlQueueImuData.size() == 0)
         {
             Verbose::PrintMess("Not IMU data in mlQueueImuData!!", Verbose::VERBOSITY_NORMAL);
+            if (mCurrentFrame.mpImuPreintegratedFrame)
+            {
+                delete mCurrentFrame.mpImuPreintegratedFrame;
+                mCurrentFrame.mpImuPreintegratedFrame = nullptr;
+            }
+            mCurrentFrame.mpImuPreintegrated = nullptr;
             mCurrentFrame.setIntegrated();
             return;
         }
@@ -1797,6 +1804,12 @@ namespace ORB_SLAM3
         if (n == 0)
         {
             cout << "Empty IMU measurements vector!!!\n";
+            if (mCurrentFrame.mpImuPreintegratedFrame)
+            {
+                delete mCurrentFrame.mpImuPreintegratedFrame;
+                mCurrentFrame.mpImuPreintegratedFrame = nullptr;
+            }
+            mCurrentFrame.mpImuPreintegrated = nullptr;
             return;
         }
 
@@ -1867,8 +1880,36 @@ namespace ORB_SLAM3
             return false;
         }
 
+        auto invalidateCurrentImu = [&]() {
+            if (mCurrentFrame.mpImuPreintegratedFrame)
+            {
+                delete mCurrentFrame.mpImuPreintegratedFrame;
+                mCurrentFrame.mpImuPreintegratedFrame = nullptr;
+            }
+            mCurrentFrame.mpImuPreintegrated = nullptr;
+        };
+
+        auto resetLastKFPreintegration = [&]() {
+            if (mpImuPreintegratedFromLastKF)
+            {
+                if (mpLastKeyFrame)
+                    mpImuPreintegratedFromLastKF->Initialize(mpLastKeyFrame->GetImuBias());
+                else
+                    mpImuPreintegratedFromLastKF->Initialize(IMU::Bias());
+                mpImuPreintegratedFromLastKF->dT = 0.f;
+            }
+        };
+
         if (mbMapUpdated && mpLastKeyFrame)
         {
+            if (!mpImuPreintegratedFromLastKF || mpImuPreintegratedFromLastKF->dT <= 0.f)
+            {
+                cout << "invalid preintegration from last keyframe (null or zero dt)" << endl;
+                resetLastKFPreintegration();
+                invalidateCurrentImu();
+                return false;
+            }
+
             const Eigen::Vector3f twb1 = mpLastKeyFrame->GetImuPosition();
             const Eigen::Matrix3f Rwb1 = mpLastKeyFrame->GetImuRotation();
             const Eigen::Vector3f Vwb1 = mpLastKeyFrame->GetVelocity();
@@ -1878,10 +1919,24 @@ namespace ORB_SLAM3
 
             Eigen::Matrix3f Rwb2 = IMU::NormalizeRotation(
                 Rwb1 * mpImuPreintegratedFromLastKF->GetDeltaRotation(mpLastKeyFrame->GetImuBias()));
+            if (!Rwb2.allFinite() || std::fabs(Rwb2.determinant()) < 1e-3f)
+            {
+                cout << "invalid predicted rotation from last keyframe" << endl;
+                resetLastKFPreintegration();
+                invalidateCurrentImu();
+                return false;
+            }
             Eigen::Vector3f twb2 = twb1 + Vwb1 * t12 + 0.5f * t12 * t12 * Gz +
                                    Rwb1 * mpImuPreintegratedFromLastKF->GetDeltaPosition(mpLastKeyFrame->GetImuBias());
             Eigen::Vector3f Vwb2 =
                 Vwb1 + t12 * Gz + Rwb1 * mpImuPreintegratedFromLastKF->GetDeltaVelocity(mpLastKeyFrame->GetImuBias());
+            if (!twb2.allFinite() || !Vwb2.allFinite())
+            {
+                cout << "invalid predicted state from last keyframe" << endl;
+                resetLastKFPreintegration();
+                invalidateCurrentImu();
+                return false;
+            }
             mCurrentFrame.SetImuPoseVelocity(Rwb2, twb2, Vwb2);
 
             mCurrentFrame.mImuBias = mpLastKeyFrame->GetImuBias();
@@ -1890,18 +1945,65 @@ namespace ORB_SLAM3
         }
         else if (!mbMapUpdated)
         {
+            if (!mLastFrame.HasPose())
+            {
+                cout << "last frame has no pose for IMU prediction" << endl;
+                invalidateCurrentImu();
+                return false;
+            }
+
+            // No preintegration available for this frame? Fall back to vision-only prediction
+            if (!mCurrentFrame.mpImuPreintegratedFrame)
+            {
+                // Copy last known IMU bias and velocity (or zero if you prefer)
+                mCurrentFrame.SetImuBias(mLastFrame.GetImuBias());
+                if (mLastFrame.HasVelocity())
+                    mCurrentFrame.SetVelocity(mLastFrame.GetVelocity());
+                else
+                    mCurrentFrame.SetVelocity(Eigen::Vector3f::Zero());
+                cout << "failed to get new imu data" << endl;
+                invalidateCurrentImu();
+                return false; // <- function returns bool in your build
+            }
+
             const Eigen::Vector3f twb1 = mLastFrame.GetImuPosition();
             const Eigen::Matrix3f Rwb1 = mLastFrame.GetImuRotation();
-            const Eigen::Vector3f Vwb1 = mLastFrame.GetVelocity();
+            const Eigen::Vector3f Vwb1 =
+                mLastFrame.HasVelocity() ? mLastFrame.GetVelocity() : Eigen::Vector3f::Zero();
             const Eigen::Vector3f Gz(0, 0, -IMU::GRAVITY_VALUE);
+
+            if (!Rwb1.allFinite() || std::fabs(Rwb1.determinant()) < 1e-3f)
+            {
+                cout << "invalid IMU rotation on last frame" << endl;
+                invalidateCurrentImu();
+                return false;
+            }
             const float t12 = mCurrentFrame.mpImuPreintegratedFrame->dT;
+            if (!std::isfinite(t12) || t12 <= 0.f)
+            {
+                cout << "invalid dt for preintegrated frame" << endl;
+                invalidateCurrentImu();
+                return false;
+            }
 
             Eigen::Matrix3f Rwb2 = IMU::NormalizeRotation(
                 Rwb1 * mCurrentFrame.mpImuPreintegratedFrame->GetDeltaRotation(mLastFrame.mImuBias));
+            if (!Rwb2.allFinite() || std::fabs(Rwb2.determinant()) < 1e-3f)
+            {
+                cout << "invalid predicted rotation from last frame" << endl;
+                invalidateCurrentImu();
+                return false;
+            }
             Eigen::Vector3f twb2 = twb1 + Vwb1 * t12 + 0.5f * t12 * t12 * Gz +
                                    Rwb1 * mCurrentFrame.mpImuPreintegratedFrame->GetDeltaPosition(mLastFrame.mImuBias);
             Eigen::Vector3f Vwb2 =
                 Vwb1 + t12 * Gz + Rwb1 * mCurrentFrame.mpImuPreintegratedFrame->GetDeltaVelocity(mLastFrame.mImuBias);
+            if (!twb2.allFinite() || !Vwb2.allFinite())
+            {
+                cout << "invalid predicted state from last frame" << endl;
+                invalidateCurrentImu();
+                return false;
+            }
 
             mCurrentFrame.SetImuPoseVelocity(Rwb2, twb2, Vwb2);
 
@@ -2118,7 +2220,7 @@ namespace ORB_SLAM3
                              mSensor == System::IMU_RGBD))
                         {
                             if (pCurrentMap->isImuInitialized())
-                                PredictStateIMU();
+                                bOK = PredictStateIMU();
                             else
                                 bOK = false;
 
@@ -2308,7 +2410,10 @@ namespace ORB_SLAM3
                 pF->mpPrevFrame = new Frame(mLastFrame);
 
                 // Load preintegration
-                pF->mpImuPreintegratedFrame = new IMU::Preintegrated(mCurrentFrame.mpImuPreintegratedFrame);
+                if (mCurrentFrame.mpImuPreintegratedFrame)
+                    pF->mpImuPreintegratedFrame = new IMU::Preintegrated(mCurrentFrame.mpImuPreintegratedFrame);
+                else
+                    pF->mpImuPreintegratedFrame = nullptr;
             }
 
             if (pCurrentMap->isImuInitialized())
@@ -2481,6 +2586,11 @@ namespace ORB_SLAM3
                 if (!mCurrentFrame.mpImuPreintegrated || !mLastFrame.mpImuPreintegrated)
                 {
                     cout << "not IMU meas" << endl;
+                    return;
+                }
+                if (!mCurrentFrame.mpImuPreintegratedFrame || !mLastFrame.mpImuPreintegratedFrame)
+                {
+                    cout << "not IMU frame meas" << endl;
                     return;
                 }
 
@@ -3011,13 +3121,15 @@ namespace ORB_SLAM3
         if (mpAtlas->isImuInitialized() && (mCurrentFrame.mnId > mnLastRelocFrameId + mnFramesToResetIMU))
         {
             // Predict state with IMU if it is initialized and it doesnt need reset
-            PredictStateIMU();
-            return true;
+            if (PredictStateIMU())
+            {
+                return true;
+            }
+            Verbose::PrintMess("PredictStateIMU failed, falling back to visual motion model",
+                               Verbose::VERBOSITY_DEBUG);
         }
-        else
-        {
-            mCurrentFrame.SetPose(mVelocity * mLastFrame.GetPose());
-        }
+
+        mCurrentFrame.SetPose(mVelocity * mLastFrame.GetPose());
 
         fill(mCurrentFrame.mvpMapPoints.begin(), mCurrentFrame.mvpMapPoints.end(), static_cast<MapPoint *>(NULL));
 

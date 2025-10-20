@@ -481,6 +481,12 @@ namespace ORB_SLAM3
                     continue;
                 if (pKFi->bImu && pKFi->mPrevKF->bImu)
                 {
+                    if (!pKFi->mpImuPreintegrated || pKFi->mpImuPreintegrated->dT <= 0.f)
+                    {
+                        Verbose::PrintMess("Skipping IMU edge in LocalInertialBA: empty preintegration",
+                                           Verbose::VERBOSITY_DEBUG);
+                        continue;
+                    }
                     pKFi->mpImuPreintegrated->SetNewBias(pKFi->mPrevKF->GetImuBias());
                     g2o::HyperGraph::Vertex *VP1 = optimizer.vertex(pKFi->mPrevKF->mnId);
                     g2o::HyperGraph::Vertex *VV1 = optimizer.vertex(maxKFid + 3 * (pKFi->mPrevKF->mnId) + 1);
@@ -2589,7 +2595,8 @@ namespace ORB_SLAM3
                 cout << "NOT INERTIAL LINK TO PREVIOUS FRAME!!!!" << endl;
                 continue;
             }
-            if (pKFi->bImu && pKFi->mPrevKF->bImu && pKFi->mpImuPreintegrated)
+            if (pKFi->bImu && pKFi->mPrevKF->bImu && pKFi->mpImuPreintegrated &&
+                pKFi->mpImuPreintegrated->dT > 0.f)
             {
                 pKFi->mpImuPreintegrated->SetNewBias(pKFi->mPrevKF->GetImuBias());
                 g2o::HyperGraph::Vertex *VP1 = optimizer.vertex(pKFi->mPrevKF->mnId);
@@ -2646,7 +2653,8 @@ namespace ORB_SLAM3
                 optimizer.addEdge(vear[i]);
             }
             else
-                cout << "ERROR building inertial edge" << endl;
+                Verbose::PrintMess("Skipping inertial edge (missing/invalid preintegration)",
+                                   Verbose::VERBOSITY_DEBUG);
         }
 
         // Set MapPoint vertices
@@ -3122,8 +3130,12 @@ namespace ORB_SLAM3
             {
                 if (pKFi->isBad() || pKFi->mPrevKF->mnId > maxKFid)
                     continue;
-                if (!pKFi->mpImuPreintegrated)
-                    std::cout << "Not preintegrated measurement" << std::endl;
+                if (!pKFi->mpImuPreintegrated || pKFi->mpImuPreintegrated->dT <= 0.f)
+                {
+                    Verbose::PrintMess("Skipping inertial edge in GBA: missing or empty preintegration",
+                                       Verbose::VERBOSITY_DEBUG);
+                    continue;
+                }
 
                 pKFi->mpImuPreintegrated->SetNewBias(pKFi->mPrevKF->GetImuBias());
                 g2o::HyperGraph::Vertex *VP1 = optimizer.vertex(pKFi->mPrevKF->mnId);
@@ -3425,6 +3437,8 @@ namespace ORB_SLAM3
             if (pKFi->mPrevKF && pKFi->mnId <= maxKFid)
             {
                 if (pKFi->isBad() || pKFi->mPrevKF->mnId > maxKFid)
+                    continue;
+                if (!pKFi->mpImuPreintegrated || pKFi->mpImuPreintegrated->dT <= 0.f)
                     continue;
 
                 g2o::HyperGraph::Vertex *VP1 = optimizer.vertex(pKFi->mPrevKF->mnId);
@@ -4168,7 +4182,8 @@ namespace ORB_SLAM3
                 Verbose::PrintMess("NOT INERTIAL LINK TO PREVIOUS FRAME!!!!", Verbose::VERBOSITY_NORMAL);
                 continue;
             }
-            if (pKFi->bImu && pKFi->mPrevKF->bImu && pKFi->mpImuPreintegrated)
+            if (pKFi->bImu && pKFi->mPrevKF->bImu && pKFi->mpImuPreintegrated &&
+                pKFi->mpImuPreintegrated->dT > 0.f)
             {
                 pKFi->mpImuPreintegrated->SetNewBias(pKFi->mPrevKF->GetImuBias());
                 g2o::HyperGraph::Vertex *VP1 = optimizer.vertex(pKFi->mPrevKF->mnId);
@@ -4216,7 +4231,8 @@ namespace ORB_SLAM3
                 optimizer.addEdge(vear[i]);
             }
             else
-                Verbose::PrintMess("ERROR building inertial edge", Verbose::VERBOSITY_NORMAL);
+                Verbose::PrintMess("Skipping inertial edge (missing/invalid preintegration)",
+                                   Verbose::VERBOSITY_DEBUG);
         }
 
         Verbose::PrintMess("end inserting inertial edges", Verbose::VERBOSITY_NORMAL);
@@ -4474,6 +4490,14 @@ namespace ORB_SLAM3
         int nInitialMonoCorrespondences = 0;
         int nInitialStereoCorrespondences = 0;
         int nInitialCorrespondences = 0;
+
+        if (!pFrame->mpImuPreintegrated || !pFrame->mpImuPreintegratedFrame || !pFrame->mpLastKeyFrame ||
+            pFrame->mpImuPreintegrated->dT <= 0.f)
+        {
+            Verbose::PrintMess("PoseInertialOptimizationLastKeyFrame: missing IMU data, falling back to visual optimization",
+                               Verbose::VERBOSITY_DEBUG);
+            return PoseOptimization(pFrame);
+        }
 
         // Set Frame vertex
         VertexPose *VP = new VertexPose(pFrame);
@@ -4857,6 +4881,15 @@ namespace ORB_SLAM3
         int nInitialMonoCorrespondences = 0;
         int nInitialStereoCorrespondences = 0;
         int nInitialCorrespondences = 0;
+
+        Frame *pPrevFrame = pFrame->mpPrevFrame;
+        if (!pFrame->mpImuPreintegratedFrame || !pFrame->mpImuPreintegrated || !pPrevFrame || !pPrevFrame->mpcpi ||
+            pFrame->mpImuPreintegratedFrame->dT <= 0.f)
+        {
+            Verbose::PrintMess("PoseInertialOptimizationLastFrame: missing IMU data, falling back to visual optimization",
+                               Verbose::VERBOSITY_DEBUG);
+            return PoseOptimization(pFrame);
+        }
 
         // Set Current Frame vertex
         VertexPose *VP = new VertexPose(pFrame);
