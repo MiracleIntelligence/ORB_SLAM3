@@ -203,7 +203,7 @@ namespace ORB_SLAM3
         its++;
         if (its >= 3)
         {
-            NormalizeRotation(Rwb);
+            Rwb = NormalizeRotation(Rwb);
             its = 0;
         }
 
@@ -238,7 +238,7 @@ namespace ORB_SLAM3
             DR(1, 2) = 0.0;
             DR(2, 0) = 0.0;
             DR(2, 1) = 0.0;
-            NormalizeRotation(DR);
+            DR = NormalizeRotation(DR);
             its = 0;
         }
 
