@@ -17,6 +17,7 @@
 */
 
 #include "System.h"
+#include "Version.h"
 
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -36,6 +37,15 @@
 namespace ORB_SLAM3 {
 
     Verbose::eLevel Verbose::th = Verbose::VERBOSITY_NORMAL;
+
+    std::string System::GetVersionString() {
+        const std::string version = ORB_SLAM3_VERSION_STRING;
+        const std::string git     = ORB_SLAM3_GIT_DESCRIBE;
+        if (git.empty() || git == "unknown") {
+            return version;
+        }
+        return version + " (" + git + ")";
+    }
 
     System::System(const string &strVocFile,
                    const string &strSettingsFile,
@@ -62,6 +72,7 @@ namespace ORB_SLAM3 {
              << "This is free software, and you are welcome to redistribute it" << endl
              << "under certain conditions. See LICENSE.txt." << endl
              << endl;
+        cout << "ORB-SLAM3 version: " << System::GetVersionString() << endl;
 
         cout << "Input sensor was set to: ";
 

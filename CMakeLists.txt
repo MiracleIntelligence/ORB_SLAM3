@@ -1,6 +1,29 @@
 cmake_minimum_required(VERSION 2.8)
 project(ORB_SLAM3)
 
+set(ORB_SLAM3_VERSION_MAJOR 1)
+set(ORB_SLAM3_VERSION_MINOR 0)
+set(ORB_SLAM3_VERSION_PATCH 0)
+set(ORB_SLAM3_VERSION_STRING "${ORB_SLAM3_VERSION_MAJOR}.${ORB_SLAM3_VERSION_MINOR}.${ORB_SLAM3_VERSION_PATCH}")
+
+execute_process(
+  COMMAND git describe --tags --dirty --always
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+  RESULT_VARIABLE ORB_GIT_RESULT
+  OUTPUT_VARIABLE ORB_GIT_DESCRIBE
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+if(NOT ORB_GIT_RESULT EQUAL 0 OR ORB_GIT_DESCRIBE STREQUAL "")
+  set(ORB_GIT_DESCRIBE "unknown")
+endif()
+
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/generated)
+configure_file(
+  ${CMAKE_SOURCE_DIR}/include/Version.h.in
+  ${CMAKE_BINARY_DIR}/generated/Version.h
+  @ONLY
+)
+
 IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release)
 ENDIF()
@@ -54,6 +77,7 @@ include_directories(
 ${PROJECT_SOURCE_DIR}
 ${PROJECT_SOURCE_DIR}/include
 ${PROJECT_SOURCE_DIR}/include/CameraModels
+${CMAKE_BINARY_DIR}/generated
 ${PROJECT_SOURCE_DIR}/Thirdparty/Sophus
 ${EIGEN3_INCLUDE_DIR}
 ${Pangolin_INCLUDE_DIRS}
@@ -120,6 +144,11 @@ include/TwoViewReconstruction.h
 include/SerializationUtils.h
 include/Config.h
 include/Settings.h)
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
+  VERSION ${ORB_SLAM3_VERSION_STRING}
+  SOVERSION ${ORB_SLAM3_VERSION_MAJOR}
+)
 
 add_subdirectory(Thirdparty/g2o)
 
