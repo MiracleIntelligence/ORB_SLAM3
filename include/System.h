@@ -180,6 +180,10 @@ namespace ORB_SLAM3 {
         std::vector<MapPoint *> GetTrackedMapPoints();
         std::vector<cv::KeyPoint> GetTrackedKeyPointsUn();
 
+        // Get the current frame with ORB-SLAM3 overlay (keypoints, tracking status, etc.)
+        // Returns an empty Mat if frame drawer is not available
+        cv::Mat GetDrawnFrame(float imageScale = 1.f);
+
         // Build metadata
         static std::string GetVersionString();
 

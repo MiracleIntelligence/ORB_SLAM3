@@ -1403,6 +1403,13 @@ namespace ORB_SLAM3
         return mTrackedKeyPointsUn;
     }
 
+    cv::Mat System::GetDrawnFrame(float imageScale)
+    {
+        if (mpFrameDrawer)
+            return mpFrameDrawer->DrawFrame(imageScale);
+        return cv::Mat();
+    }
+
     double System::GetTimeFromIMUInit()
     {
         double aux = mpLocalMapper->GetCurrKFTime() - mpLocalMapper->mFirstTs;
