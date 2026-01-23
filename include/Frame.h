@@ -86,9 +86,6 @@ namespace ORB_SLAM3
         // Set IMU pose and velocity (implicitly changes camera pose)
         void SetImuPoseVelocity(const Eigen::Matrix3f &Rwb, const Eigen::Vector3f &twb, const Eigen::Vector3f &Vwb);
 
-        inline void SetImuBias(const IMU::Bias &b) { mImuBias = b; }
-        inline const IMU::Bias &GetImuBias() const { return mImuBias; }
-
         Eigen::Matrix<float, 3, 1> GetImuPosition() const;
         Eigen::Matrix<float, 3, 3> GetImuRotation();
         Sophus::SE3<float> GetImuPose();

@@ -48,7 +48,6 @@ namespace ORB_SLAM3
         mTimeStereoMatch = 0;
         mTimeORB_Ext = 0;
 #endif
-        mpMutexImu = new std::mutex();
     }
 
     // Copy Constructor

@@ -73,7 +73,7 @@ namespace ORB_SLAM3
         unique_lock<mutex> lock(mMutex);
 
         // Erase elements in the Inverse File for the entry
-        for (std::vector<list<KeyFrame *> >::iterator vit = mvInvertedFile.begin(), vend = mvInvertedFile.end(); vit != vend; vit++)
+        for (std::vector<list<KeyFrame *>>::iterator vit = mvInvertedFile.begin(), vend = mvInvertedFile.end(); vit != vend; vit++)
         {
             // List of keyframes that share the word
             list<KeyFrame *> &lKFs = *vit;
@@ -131,7 +131,7 @@ namespace ORB_SLAM3
         if (lKFsSharingWords.empty())
             return vector<KeyFrame *>();
 
-        list<pair<float, KeyFrame *> > lScoreAndMatch;
+        list<pair<float, KeyFrame *>> lScoreAndMatch;
 
         // Only compare against those keyframes that share enough words
         int maxCommonWords = 0;
@@ -165,11 +165,11 @@ namespace ORB_SLAM3
         if (lScoreAndMatch.empty())
             return vector<KeyFrame *>();
 
-        list<pair<float, KeyFrame *> > lAccScoreAndMatch;
+        list<pair<float, KeyFrame *>> lAccScoreAndMatch;
         float bestAccScore = minScore;
 
         // Lets now accumulate score by covisibility
-        for (list<pair<float, KeyFrame *> >::iterator it = lScoreAndMatch.begin(), itend = lScoreAndMatch.end(); it != itend; it++)
+        for (list<pair<float, KeyFrame *>>::iterator it = lScoreAndMatch.begin(), itend = lScoreAndMatch.end(); it != itend; it++)
         {
             KeyFrame *pKFi = it->second;
             vector<KeyFrame *> vpNeighs = pKFi->GetBestCovisibilityKeyFrames(10);
@@ -203,7 +203,7 @@ namespace ORB_SLAM3
         vector<KeyFrame *> vpLoopCandidates;
         vpLoopCandidates.reserve(lAccScoreAndMatch.size());
 
-        for (list<pair<float, KeyFrame *> >::iterator it = lAccScoreAndMatch.begin(), itend = lAccScoreAndMatch.end(); it != itend; it++)
+        for (list<pair<float, KeyFrame *>>::iterator it = lAccScoreAndMatch.begin(), itend = lAccScoreAndMatch.end(); it != itend; it++)
         {
             if (it->first > minScoreToRetain)
             {
@@ -271,7 +271,7 @@ namespace ORB_SLAM3
 
         if (!lKFsSharingWordsLoop.empty())
         {
-            list<pair<float, KeyFrame *> > lScoreAndMatch;
+            list<pair<float, KeyFrame *>> lScoreAndMatch;
 
             // Only compare against those keyframes that share enough words
             int maxCommonWords = 0;
@@ -304,11 +304,11 @@ namespace ORB_SLAM3
 
             if (!lScoreAndMatch.empty())
             {
-                list<pair<float, KeyFrame *> > lAccScoreAndMatch;
+                list<pair<float, KeyFrame *>> lAccScoreAndMatch;
                 float bestAccScore = minScore;
 
                 // Lets now accumulate score by covisibility
-                for (list<pair<float, KeyFrame *> >::iterator it = lScoreAndMatch.begin(), itend = lScoreAndMatch.end(); it != itend; it++)
+                for (list<pair<float, KeyFrame *>>::iterator it = lScoreAndMatch.begin(), itend = lScoreAndMatch.end(); it != itend; it++)
                 {
                     KeyFrame *pKFi = it->second;
                     vector<KeyFrame *> vpNeighs = pKFi->GetBestCovisibilityKeyFrames(10);
@@ -341,7 +341,7 @@ namespace ORB_SLAM3
                 set<KeyFrame *> spAlreadyAddedKF;
                 vpLoopCand.reserve(lAccScoreAndMatch.size());
 
-                for (list<pair<float, KeyFrame *> >::iterator it = lAccScoreAndMatch.begin(), itend = lAccScoreAndMatch.end(); it != itend; it++)
+                for (list<pair<float, KeyFrame *>>::iterator it = lAccScoreAndMatch.begin(), itend = lAccScoreAndMatch.end(); it != itend; it++)
                 {
                     if (it->first > minScoreToRetain)
                     {
@@ -358,7 +358,7 @@ namespace ORB_SLAM3
 
         if (!lKFsSharingWordsMerge.empty())
         {
-            list<pair<float, KeyFrame *> > lScoreAndMatch;
+            list<pair<float, KeyFrame *>> lScoreAndMatch;
 
             // Only compare against those keyframes that share enough words
             int maxCommonWords = 0;
@@ -391,11 +391,11 @@ namespace ORB_SLAM3
 
             if (!lScoreAndMatch.empty())
             {
-                list<pair<float, KeyFrame *> > lAccScoreAndMatch;
+                list<pair<float, KeyFrame *>> lAccScoreAndMatch;
                 float bestAccScore = minScore;
 
                 // Lets now accumulate score by covisibility
-                for (list<pair<float, KeyFrame *> >::iterator it = lScoreAndMatch.begin(), itend = lScoreAndMatch.end(); it != itend; it++)
+                for (list<pair<float, KeyFrame *>>::iterator it = lScoreAndMatch.begin(), itend = lScoreAndMatch.end(); it != itend; it++)
                 {
                     KeyFrame *pKFi = it->second;
                     vector<KeyFrame *> vpNeighs = pKFi->GetBestCovisibilityKeyFrames(10);
@@ -428,7 +428,7 @@ namespace ORB_SLAM3
                 set<KeyFrame *> spAlreadyAddedKF;
                 vpMergeCand.reserve(lAccScoreAndMatch.size());
 
-                for (list<pair<float, KeyFrame *> >::iterator it = lAccScoreAndMatch.begin(), itend = lAccScoreAndMatch.end(); it != itend; it++)
+                for (list<pair<float, KeyFrame *>>::iterator it = lAccScoreAndMatch.begin(), itend = lAccScoreAndMatch.end(); it != itend; it++)
                 {
                     if (it->first > minScoreToRetain)
                     {
@@ -506,7 +506,7 @@ namespace ORB_SLAM3
             minCommonWords = nMinWords;
         }
 
-        list<pair<float, KeyFrame *> > lScoreAndMatch;
+        list<pair<float, KeyFrame *>> lScoreAndMatch;
 
         int nscores = 0;
 
@@ -527,11 +527,11 @@ namespace ORB_SLAM3
         if (lScoreAndMatch.empty())
             return;
 
-        list<pair<float, KeyFrame *> > lAccScoreAndMatch;
+        list<pair<float, KeyFrame *>> lAccScoreAndMatch;
         float bestAccScore = 0;
 
         // Lets now accumulate score by covisibility
-        for (list<pair<float, KeyFrame *> >::iterator it = lScoreAndMatch.begin(), itend = lScoreAndMatch.end(); it != itend; it++)
+        for (list<pair<float, KeyFrame *>>::iterator it = lScoreAndMatch.begin(), itend = lScoreAndMatch.end(); it != itend; it++)
         {
             KeyFrame *pKFi = it->second;
             vector<KeyFrame *> vpNeighs = pKFi->GetBestCovisibilityKeyFrames(10);
@@ -562,7 +562,7 @@ namespace ORB_SLAM3
         set<KeyFrame *> spAlreadyAddedKF;
         vpLoopCand.reserve(lAccScoreAndMatch.size());
         vpMergeCand.reserve(lAccScoreAndMatch.size());
-        for (list<pair<float, KeyFrame *> >::iterator it = lAccScoreAndMatch.begin(), itend = lAccScoreAndMatch.end(); it != itend; it++)
+        for (list<pair<float, KeyFrame *>>::iterator it = lAccScoreAndMatch.begin(), itend = lAccScoreAndMatch.end(); it != itend; it++)
         {
             const float &si = it->first;
             if (si > minScoreToRetain)
@@ -635,7 +635,7 @@ namespace ORB_SLAM3
 
         int minCommonWords = maxCommonWords * 0.8f;
 
-        list<pair<float, KeyFrame *> > lScoreAndMatch;
+        list<pair<float, KeyFrame *>> lScoreAndMatch;
 
         int nscores = 0;
 
@@ -656,11 +656,11 @@ namespace ORB_SLAM3
         if (lScoreAndMatch.empty())
             return;
 
-        list<pair<float, KeyFrame *> > lAccScoreAndMatch;
+        list<pair<float, KeyFrame *>> lAccScoreAndMatch;
         float bestAccScore = 0;
 
         // Lets now accumulate score by covisibility
-        for (list<pair<float, KeyFrame *> >::iterator it = lScoreAndMatch.begin(), itend = lScoreAndMatch.end(); it != itend; it++)
+        for (list<pair<float, KeyFrame *>>::iterator it = lScoreAndMatch.begin(), itend = lScoreAndMatch.end(); it != itend; it++)
         {
             KeyFrame *pKFi = it->second;
             vector<KeyFrame *> vpNeighs = pKFi->GetBestCovisibilityKeyFrames(10);
@@ -699,14 +699,14 @@ namespace ORB_SLAM3
         vpMergeCand.reserve(nNumCandidates);
         set<KeyFrame *> spAlreadyAddedKF;
         int i = 0;
-        list<pair<float, KeyFrame *> >::iterator it = lAccScoreAndMatch.begin();
+        list<pair<float, KeyFrame *>>::iterator it = lAccScoreAndMatch.begin();
         while (i < lAccScoreAndMatch.size() && (vpLoopCand.size() < nNumCandidates || vpMergeCand.size() < nNumCandidates))
         {
             KeyFrame *pKFi = it->second;
-            // if (pKFi->isBad())
-            //     continue;
+            if (pKFi->isBad())
+                continue;
 
-            if (!pKFi->isBad() && !pKFi->isBad() && !spAlreadyAddedKF.count(pKFi))
+            if (!pKFi->isBad() && !spAlreadyAddedKF.count(pKFi))
             {
                 if (pKF->GetMap() == pKFi->GetMap() && vpLoopCand.size() < nNumCandidates)
                 {
@@ -761,7 +761,7 @@ namespace ORB_SLAM3
 
         int minCommonWords = maxCommonWords * 0.8f;
 
-        list<pair<float, KeyFrame *> > lScoreAndMatch;
+        list<pair<float, KeyFrame *>> lScoreAndMatch;
 
         int nscores = 0;
 
@@ -782,11 +782,11 @@ namespace ORB_SLAM3
         if (lScoreAndMatch.empty())
             return vector<KeyFrame *>();
 
-        list<pair<float, KeyFrame *> > lAccScoreAndMatch;
+        list<pair<float, KeyFrame *>> lAccScoreAndMatch;
         float bestAccScore = 0;
 
         // Lets now accumulate score by covisibility
-        for (list<pair<float, KeyFrame *> >::iterator it = lScoreAndMatch.begin(), itend = lScoreAndMatch.end(); it != itend; it++)
+        for (list<pair<float, KeyFrame *>>::iterator it = lScoreAndMatch.begin(), itend = lScoreAndMatch.end(); it != itend; it++)
         {
             KeyFrame *pKFi = it->second;
             vector<KeyFrame *> vpNeighs = pKFi->GetBestCovisibilityKeyFrames(10);
@@ -817,7 +817,7 @@ namespace ORB_SLAM3
         set<KeyFrame *> spAlreadyAddedKF;
         vector<KeyFrame *> vpRelocCandidates;
         vpRelocCandidates.reserve(lAccScoreAndMatch.size());
-        for (list<pair<float, KeyFrame *> >::iterator it = lAccScoreAndMatch.begin(), itend = lAccScoreAndMatch.end(); it != itend; it++)
+        for (list<pair<float, KeyFrame *>>::iterator it = lAccScoreAndMatch.begin(), itend = lAccScoreAndMatch.end(); it != itend; it++)
         {
             const float &si = it->first;
             if (si > minScoreToRetain)
