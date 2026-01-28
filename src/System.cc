@@ -19,6 +19,7 @@
 
 
 #include "System.h"
+#include "Version.h"
 #include "Converter.h"
 #include <thread>
 #include <pangolin/pangolin.h>
@@ -50,7 +51,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     "This program comes with ABSOLUTELY NO WARRANTY;" << endl  <<
     "This is free software, and you are welcome to redistribute it" << endl <<
     "under certain conditions. See LICENSE.txt." << endl << endl;
-
+    cout << "ORB-SLAM3 version: " << System::GetVersionString() << endl;
     cout << "Input sensor was set to: ";
 
     if(mSensor==MONOCULAR)
@@ -1543,6 +1544,17 @@ string System::CalculateCheckSum(string filename, int type)
     }
 
     return checksum;
+}
+
+std::string System::GetVersionString()
+{
+    const std::string version = ORB_SLAM3_VERSION_STRING;
+    const std::string git = ORB_SLAM3_GIT_DESCRIBE;
+    if (git.empty() || git == "unknown")
+    {
+        return version;
+    }
+    return version + " (" + git + ")";
 }
 
 } //namespace ORB_SLAM
