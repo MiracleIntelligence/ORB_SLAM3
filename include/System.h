@@ -180,6 +180,10 @@ public:
     // Build metadata
     static std::string GetVersionString();
 
+    // Get the current frame with ORB-SLAM3 overlay (keypoints, tracking status, etc.)
+    // Returns an empty Mat if frame drawer is not available
+    cv::Mat GetDrawnFrame(float imageScale = 1.f);
+
     // For debugging
     double GetTimeFromIMUInit();
     bool isLost();
