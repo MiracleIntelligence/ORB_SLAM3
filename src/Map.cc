@@ -359,7 +359,8 @@ void Map::SetLastMapChange(int currentChangeId)
 void Map::PreSave(std::set<GeometricCamera*> &spCams)
 {
     int nMPWithoutObs = 0;
-    for(MapPoint* pMPi : mspMapPoints)
+    vector<MapPoint *> vMPs = GetAllMapPoints();
+    for (MapPoint *pMPi : vMPs)
     {
         if(!pMPi || pMPi->isBad())
             continue;

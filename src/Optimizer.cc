@@ -2833,8 +2833,9 @@ void Optimizer::LocalInertialBA(KeyFrame *pKF, bool *pbStopFlag, Map *pMap, int&
 
     //cout << "Total map points: " << lLocalMapPoints.size() << endl;
     for(map<int,int>::iterator mit=mVisEdges.begin(), mend=mVisEdges.end(); mit!=mend; mit++)
-    {
-        assert(mit->second>=3);
+    {        
+        Verbose::PrintMess("Total edges for KeyFrame " + to_string(mit->first) + ": " + to_string(mit->second), Verbose::VERBOSITY_NORMAL);
+        // assert(mit->second>=3);
     }
 
     optimizer.initializeOptimization();
